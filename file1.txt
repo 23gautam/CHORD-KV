@@ -1,0 +1,6 @@
+insert, song1, artist1
+insert, song2, artist2
+query, song1
+insert, song3, artist3
+query, song2
+query, song3
