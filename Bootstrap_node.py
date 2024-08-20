@@ -23,7 +23,7 @@ port = host_port[1]
 node = node(ip_port, boot_ip_port, replicas, rep_type, True)
 
 responses_dict = {}
-# istoriko twn request kai responses gia ta antistoixa seqn
+
 requests_list = []
 responses_list = []
 seqn = 0
@@ -45,8 +45,6 @@ def make_same_req(source, req_type, data, req_code):
 
 def post_req_to(ip_port, req):
     url = "http://" + ip_port + "/ntwreq"
-    # debugging
-    #debug("I LL POST THIS NTW REQUEST:" + json.dumps(req))
     requests.post(url, json=req)
 
 def post_req_thread(ip_port, req):
@@ -55,8 +53,6 @@ def post_req_thread(ip_port, req):
 
 def post_resp_to(ip_port, resp):
     url = "http://" + ip_port + "/ntwresp"
-    # debugging
-    #debug("I LL POST THIS NTW  RESPONSE:" + json.dumps(resp))
     requests.post(url, json=resp)
 
 def post_resp_thread(ip_port, resp):
@@ -124,7 +120,7 @@ def insert():
         data = {'key': key, 'value': value, "resp_ip_port":"None" , 'index': 0}
         req = make_req('insert', data, req_code)
 
-        # η post req thread ανοιγει ενα thread
+
         post_req_thread(node.ip_port, req)
         while responses_dict.get(req_code, "None") == "None":
             {}
@@ -233,7 +229,7 @@ def ntwreq():
     req_dict = json.loads(request.data)
     source = req_dict['source']
     req_type = req_dict['type']
-    # to data apotelei dict keys:values opou keys oi metavlites kai values oi times tous
+   
     data = req_dict['data']
     req_code = req_dict['seqn']
 
@@ -294,12 +290,9 @@ def dispatch_join(source, req_code, req_type, data):
     #### THIS IS ONLY FOR BOOTSTRAP NODE --> IT SENDS THE NODE THAT JOINS REPN AND REP_TYPE INFORMATION####
     resp=make_resp(source,'join_vars',{ 'repn': node.get_replicas(), 'rep_type': node.get_rep_type()},req_code)
     post_resp_to(source,resp )
-    #######################################################################################################
+   
     if (is_responsible(data['key'])):
-        ######only for bootstrap cause he is the first to receive join req
-        ######if he is responsible its the only case when we dont pass from the prev
-        ######so we must set the data['prev']=node.prev_ip_port
-        ###### and also send request to prev to update its succ to the source
+        
         data['prev']=node.prev_ip_port
 
         post_resp_to(node.prev_ip_port, {'type':'set_neighboors', 'prev':"None", 'succ':source})
@@ -554,7 +547,7 @@ def dispatch_get_keys(source,req_code,req_type,data):
     return
 
 def dispatch_join_upd_chain(source,req_code,req_type,data):
-    #exei ginei idi to join tou komvou kai exoun enimerwthei oloi oi pointers
+    
     same_keys=data['same_keys']
     new_keys=data['new_keys']
     index=data['index']
@@ -579,7 +572,6 @@ def is_responsible(key):
     curr = node.id
     prev = hash(node.prev_ip_port)
     if node.is_alone():
-        # ara uparxei mono enas komvos sto chord
         return True
     elif prev > curr:
         if (key > prev or key <= curr):
@@ -613,11 +605,6 @@ def debug(string):
     print("####################################################\n")
 
 if __name__ == '__main__':
-    # run join func via a thread so that the server will have begun when we get the response!!!!
-    # if we dont use thread the response comes but the server hasnt started yet so it doesnt accept it
-    # IT WORKED!!!
-    # thread = Thread(target=join)
-    # thread.start()
 
     join()
     app.run(host=host, port=port, debug=True)
