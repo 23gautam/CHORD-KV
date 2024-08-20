@@ -21,7 +21,6 @@ port=host_port[1]
 node=node(ip_port,boot_ip_port)
 
 responses_dict={}
-#istoriko twn request kai responses gia ta antistoixa seqn
 requests_list=[]
 responses_list=[]
 seqn=0
@@ -40,9 +39,7 @@ def make_same_req(source, req_type,data,req_code):
     return req
 
 def post_req_to(ip_port, req):
-    url="http://"+ip_port+"/ntwreq"
-    #debugging
-    #debug("I LL POST THIS NTW REQUEST:"+json.dumps(req))
+    url="http://"+ip_port+"/ntwreq"   
     requests.post(url,json=req)
 
 def post_req_thread(ip_port,req):
@@ -51,8 +48,6 @@ def post_req_thread(ip_port,req):
 
 def post_resp_to(ip_port, resp):
     url="http://"+ip_port+"/ntwresp"
-    # debugging
-    #debug("I LL POST THIS NTW  RESPONSE:" + json.dumps(resp))
     requests.post(url,json=resp)
 
 def post_resp_thread(ip_port,resp):
@@ -183,7 +178,6 @@ def depart():
         if not node.get_isInChord():
             return 'This node does not participate in Chord!\n'
         else:
-            # Στις επόμενες 4 γραμμές, μαζεύω τα data που θα στείλω στον successor
             global seqn
             seqn = seqn + 1
             req_code = str(seqn)
@@ -210,8 +204,6 @@ def depart():
                 prev=node.prev_ip_port
                 succ=node.succ_ip_port
                 if  node.is_duo():
-                    # an exoume mono 2 nodes tote prepei na steiloume na enimerwsei kai ton next kai ton prev o enas mas geitonas
-                    #to parakatw tha perimenei mexri na lavoume apantisi
                     post_resp_to(node.prev_ip_port, {'prev':prev, 'succ':succ, 'type':'set_neighboors'})
                 else:
                     #an uparxoun toul 3 komvoi stelnoume kai ston prev kai ston next na enimerwsoun mono ton enan geitona tous ekastos
@@ -264,10 +256,6 @@ def join():
     global seqn
     seqn = seqn + 1
     req_code = str(seqn)
-    # 1) kane join to node sto chord kai ftiakse tous pointers tou kai twn geitonwn tou kai dwstou kai ta kleidia tou epomenou same keys  new_keys
-    # 2) gia tous epomenous k nodes ektelese new ntw_req --> ( source, type="join_upd_chain" , req_code, data { index:0 , same_keys, new_keys }    )
-    # 3) pare ta keys_vals tou prevs stis theseis 0 ews k-1 kai valta stis dikes sou 1 ews k-1
-    # 4) respond to user
     data = {'key': node.id}
     req = make_req('join', data, req_code)
 
@@ -277,12 +265,10 @@ def join():
         {}
     # pop response from dict and handle it
     resp = responses_dict.pop(req_code)
-    # apo to response pairnw ta same_keys, new_keys, kai ftiaxnw kai tous geitones mou
     same_keys = resp['data']['same_keys']
     new_keys = resp['data']['new_keys']
     node.prev_ip_port = resp['data']['prev']
     node.succ_ip_port = resp['data']['succ']
-    # ta new_keys einai ta keys gia ta opoia twra tha eisai responsible
     node.keys_vals[0] = new_keys
     data = {'index': 0, 'same_keys': same_keys, 'new_keys': new_keys}
     req = make_req('join_upd_chain', data, req_code)
@@ -301,7 +287,6 @@ def join():
 
     post_resp_to(node.boot_ip_port, {'type': 'inc_number'})
 
-    # vale ta keys 0--k-2 tou prev sta dika sou 1--k-1
     # if nodes_in_chord < k then go till nodes_in_chord -1 element
     nodes_in_chord= requests.post("http://" + node.boot_ip_port + "/ntwresp", json={'type':'nodes_in_chord'})
     nodes_in_chord = json.loads(nodes_in_chord.text)['nodes_in_chord']
@@ -318,7 +303,6 @@ def ntwreq():
     req_dict = json.loads(request.data)
     source = req_dict['source']
     req_type = req_dict['type']
-    # to data apotelei dict keys:values opou keys oi metavlites kai values oi times tous
     data = req_dict['data']
     req_code = req_dict['seqn']
 
@@ -683,9 +667,7 @@ def delayed_join():
     return
 
 if __name__ == '__main__':
-    # run join func via a thread so that the server will have begun when we get the response!!!!
-    # if we dont use thread the response comes but the server hasnt started yet so it doesnt accept it
-    # IT WORKED!!!
+
     thread = Thread(target=delayed_join)
     thread.start()
     app.run(host=host, port=port, debug=True)
